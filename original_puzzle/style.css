@@ -293,3 +293,89 @@ header h1 {
     font-weight: bold;
     cursor: pointer;
 }
+
+/* ===== スマホ対応 ===== */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    header h1 {
+        font-size: 1.6rem;
+    }
+
+    .card {
+        padding: 15px;
+    }
+
+    .controls {
+        gap: 12px;
+    }
+
+    .control-group {
+        min-width: unset;
+        width: 100%;
+    }
+
+    .upload-label {
+        padding: 12px 20px;
+        font-size: 1rem;
+    }
+
+    .settings {
+        justify-content: center;
+    }
+
+    .primary-btn {
+        padding: 12px 25px;
+        font-size: 1.1rem;
+        width: 100%;
+    }
+
+    .game-area {
+        min-height: unset;
+        padding: 15px;
+    }
+
+    .game-layout {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .reference-panel {
+        flex: 0 0 auto;
+        width: 100%;
+    }
+
+    .reference-container {
+        aspect-ratio: unset;
+        max-height: 150px;
+    }
+
+    .reference-container img {
+        max-height: 150px;
+    }
+
+    .puzzle-board {
+        min-height: 300px;
+    }
+
+    .modal-content {
+        padding: 25px;
+        margin: 20px;
+    }
+
+    .modal-content h2 {
+        font-size: 1.8rem;
+    }
+
+    .modal-content p {
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+    }
+
+    .secondary-btn {
+        font-size: 1rem;
+        padding: 10px 25px;
+    }
+}

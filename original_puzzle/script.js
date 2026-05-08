@@ -202,7 +202,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // ボードのサイズに合わせて画像をフィットさせる（比率維持）
         const boardRect = puzzleBoard.getBoundingClientRect();
-        const padding = 40; // 完成エリアのサイズを元に戻す
+        // パディングをボードサイズに比例させる（スマホ対応）
+        const padding = Math.max(15, Math.min(40, boardRect.width * 0.05));
         const availableWidth = boardRect.width - padding * 2;
         const availableHeight = boardRect.height - padding * 2;
 
@@ -302,22 +303,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 初期配置：完成エリア（グレー部分）の外周にギリギリまで近づけて配置
                 let initX, initY;
                 const side = Math.floor(Math.random() * 4); // 0:上, 1:下, 2:左, 3:右
-                const range = 40; // 散らばる範囲（狭く設定）
-                const offset = 5; // 枠からの距離（ギリギリに設定）
+                // 散らばる範囲をボードサイズに比例させる（スマホ対応）
+                const scatterRange = Math.max(10, Math.min(40, boardRect.width * 0.04));
+                const scatterOffset = Math.max(3, Math.min(5, boardRect.width * 0.01));
 
                 if (side === 0) { // 上
                     initX = frameX + Math.random() * imgWidth - geom.bbox.w / 2;
-                    initY = frameY - geom.bbox.h - Math.random() * range - offset;
+                    initY = frameY - geom.bbox.h - Math.random() * scatterRange - scatterOffset;
                 } else if (side === 1) { // 下
                     initX = frameX + Math.random() * imgWidth - geom.bbox.w / 2;
-                    initY = frameY + imgHeight + Math.random() * range + offset;
+                    initY = frameY + imgHeight + Math.random() * scatterRange + scatterOffset;
                 } else if (side === 2) { // 左
-                    initX = frameX - geom.bbox.w - Math.random() * range - offset;
+                    initX = frameX - geom.bbox.w - Math.random() * scatterRange - scatterOffset;
                     initY = frameY + Math.random() * imgHeight - geom.bbox.h / 2;
                 } else { // 右
-                    initX = frameX + imgWidth + Math.random() * range + offset;
+                    initX = frameX + imgWidth + Math.random() * scatterRange + scatterOffset;
                     initY = frameY + Math.random() * imgHeight - geom.bbox.h / 2;
                 }
+
+                // ボード内に収まるようにclamp
+                initX = Math.max(0, Math.min(initX, boardRect.width - geom.bbox.w));
+                initY = Math.max(0, Math.min(initY, boardRect.height - geom.bbox.h));
 
                 piece.style.left = `${initX}px`;
                 piece.style.top = `${initY}px`;
@@ -383,6 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function onPointerDown(e, pieceObj) {
         if (pieceObj.isLocked) return;
+        e.preventDefault(); // タッチ操作時のページスクロール防止
 
         isDragging = true;
         activePiece = pieceObj;
@@ -402,6 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function onPointerMove(e) {
         if (!isDragging || !activePiece) return;
+        e.preventDefault(); // タッチ操作時のページスクロール防止
 
         const boardRect = puzzleBoard.getBoundingClientRect();
         let x = e.clientX - boardRect.left - offset.x;
