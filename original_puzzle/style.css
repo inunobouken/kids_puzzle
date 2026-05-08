@@ -297,19 +297,26 @@ header h1 {
 /* ===== スマホ対応 ===== */
 @media (max-width: 768px) {
     body {
-        padding: 10px;
+        padding: 5px;
+        min-height: unset;
+        align-items: flex-start;
+    }
+
+    .app-container {
+        gap: 10px;
     }
 
     header h1 {
-        font-size: 1.6rem;
+        font-size: 1.5rem;
+        margin-bottom: 0;
     }
 
     .card {
-        padding: 15px;
+        padding: 12px;
     }
 
     .controls {
-        gap: 12px;
+        gap: 10px;
     }
 
     .control-group {
@@ -318,8 +325,8 @@ header h1 {
     }
 
     .upload-label {
-        padding: 12px 20px;
-        font-size: 1rem;
+        padding: 10px 18px;
+        font-size: 0.95rem;
     }
 
     .settings {
@@ -327,42 +334,45 @@ header h1 {
     }
 
     .primary-btn {
-        padding: 12px 25px;
-        font-size: 1.1rem;
+        padding: 10px 20px;
+        font-size: 1rem;
         width: 100%;
     }
 
     .game-area {
         min-height: unset;
-        padding: 15px;
+        padding: 8px;
+        box-shadow: none;
     }
 
     .game-layout {
         flex-direction: column;
-        gap: 15px;
+        gap: 0;
     }
 
+    /* おてほんパネルはコンパクトに表示（スクロールで隠れてOK） */
     .reference-panel {
         flex: 0 0 auto;
         width: 100%;
     }
 
+    .reference-panel h3 {
+        font-size: 0.95rem;
+        margin-bottom: 5px;
+    }
+
     .reference-container {
         aspect-ratio: unset;
-        max-height: 150px;
+        max-height: 120px;
     }
 
     .reference-container img {
-        max-height: 150px;
-    }
-
-    .puzzle-board {
-        min-height: 300px;
+        max-height: 120px;
     }
 
     .modal-content {
         padding: 25px;
-        margin: 20px;
+        margin: 15px;
     }
 
     .modal-content h2 {
@@ -370,7 +380,7 @@ header h1 {
     }
 
     .modal-content p {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         margin-bottom: 15px;
     }
 
