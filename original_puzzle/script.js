@@ -99,6 +99,40 @@ document.addEventListener('DOMContentLoaded', () => {
         return vertices;
     }
 
+    /**
+     * 頂点の配列から角の丸まったSVGパス文字列(d属性用)を生成する
+     */
+    function generateRoundedPath(points, radius) {
+        if (points.length < 3) return "";
+        let d = "";
+        for (let i = 0; i < points.length; i++) {
+            const p1 = points[(i + points.length - 1) % points.length];
+            const p2 = points[i];
+            const p3 = points[(i + 1) % points.length];
+
+            const v1 = { x: p1.x - p2.x, y: p1.y - p2.y };
+            const v2 = { x: p3.x - p2.x, y: p3.y - p2.y };
+            const l1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
+            const l2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
+            
+            const r = Math.min(radius, l1 / 2, l2 / 2);
+            
+            const n1 = { x: v1.x / l1, y: v1.y / l1 };
+            const n2 = { x: v2.x / l2, y: v2.y / l2 };
+
+            const q1 = { x: p2.x + n1.x * r, y: p2.y + n1.y * r };
+            const q2 = { x: p2.x + n2.x * r, y: p2.y + n2.y * r };
+
+            if (i === 0) {
+                d += `M ${q1.x},${q1.y} `;
+            } else {
+                d += `L ${q1.x},${q1.y} `;
+            }
+            d += `Q ${p2.x},${p2.y} ${q2.x},${q2.y} `;
+        }
+        return d + "Z";
+    }
+
 
     /**
      * ピースのバウンディングボックスとclip-pathを計算
@@ -119,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const w = maxX - minX;
         const h = maxY - minY;
 
-        // clip-pathはバウンディングボックス内のローカル座標で指定
+        // clip-pathはバウンディングボックス内のローカル座標で指定（隙間ができないよう sharp polygon）
         const points = [tl, tr, br, bl].map(p => {
             const px = ((p.x - minX) / w) * 100;
             const py = ((p.y - minY) / h) * 100;
@@ -139,9 +173,13 @@ document.addEventListener('DOMContentLoaded', () => {
             y: p.y - minY
         }));
 
+        // 枠線用の角丸パス（半径10px）
+        const borderPathData = generateRoundedPath(localPoints, 10);
+
         return {
             bbox: { x: minX, y: minY, w, h },
             clipPath,
+            borderPathData,
             center,
             corners: { tl, tr, br, bl },
             localPoints
@@ -195,14 +233,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 piece.className = 'puzzle-piece movable';
                 piece.style.width = `${geom.bbox.w}px`;
                 piece.style.height = `${geom.bbox.h}px`;
-                piece.style.backgroundImage = `url(${imageSrc})`;
-                piece.style.backgroundSize = `${imgWidth}px ${imgHeight}px`;
-                // バウンディングボックスの左上からのオフセットで背景位置を設定
-                piece.style.backgroundPosition = `-${geom.bbox.x}px -${geom.bbox.y}px`;
-                piece.style.clipPath = geom.clipPath;
                 piece.style.borderRadius = '0';
 
-                // SVGオーバーレイで枠線を描画（clip-path下ではbox-shadowが効かないため）
+                // 画像レイヤー（ここを sharp polygon でクリップすることで隙間をなくす）
+                const imageLayer = document.createElement('div');
+                imageLayer.style.position = 'absolute';
+                imageLayer.style.top = '0';
+                imageLayer.style.left = '0';
+                imageLayer.style.width = '100%';
+                imageLayer.style.height = '100%';
+                imageLayer.style.backgroundImage = `url(${imageSrc})`;
+                imageLayer.style.backgroundSize = `${imgWidth}px ${imgHeight}px`;
+                imageLayer.style.backgroundPosition = `-${geom.bbox.x}px -${geom.bbox.y}px`;
+                imageLayer.style.clipPath = geom.clipPath;
+                piece.appendChild(imageLayer);
+
+                // SVGオーバーレイで枠線を描画（piece直下に置くことでclipPathの影響を受けず、linejoin="round"が有効になる）
                 const svgNS = 'http://www.w3.org/2000/svg';
                 const svg = document.createElementNS(svgNS, 'svg');
                 svg.setAttribute('width', geom.bbox.w);
@@ -212,27 +258,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 svg.style.top = '0';
                 svg.style.left = '0';
                 svg.style.pointerEvents = 'none';
+                svg.style.overflow = 'visible'; // 枠線の丸みがはみ出せるように
                 svg.classList.add('piece-border-svg');
 
                 const pointsStr = geom.localPoints.map(p => `${p.x},${p.y}`).join(' ');
 
-                // 白の内側枠線（太く描画し、clip-pathで外側がクリップされることで内側に見える）
-                const outerLine = document.createElementNS(svgNS, 'polygon');
-                outerLine.setAttribute('points', pointsStr);
-                outerLine.setAttribute('fill', 'none');
-                outerLine.setAttribute('stroke', 'white');
-                outerLine.setAttribute('stroke-width', '9');
-                outerLine.setAttribute('stroke-linejoin', 'round');
-                svg.appendChild(outerLine);
+                // SVGの内部でクリップパスを定義（白線が外にはみ出ないようにするため）
+                const defs = document.createElementNS(svgNS, 'defs');
+                const clipPath = document.createElementNS(svgNS, 'clipPath');
+                const clipId = `clip-${Math.random().toString(36).substr(2, 9)}`;
+                clipPath.setAttribute('id', clipId);
+                const clipPoly = document.createElementNS(svgNS, 'polygon');
+                clipPoly.setAttribute('points', pointsStr);
+                clipPath.appendChild(clipPoly);
+                defs.appendChild(clipPath);
+                svg.appendChild(defs);
 
-                // 黒の外側枠線（細く上に重ねてエッジ側に表示）
-                const innerLine = document.createElementNS(svgNS, 'polygon');
-                innerLine.setAttribute('points', pointsStr);
-                innerLine.setAttribute('fill', 'none');
-                innerLine.setAttribute('stroke', 'black');
-                innerLine.setAttribute('stroke-width', '3');
-                innerLine.setAttribute('stroke-linejoin', 'round');
-                svg.appendChild(innerLine);
+                // 白の内側枠線（角丸パスを使用）
+                const whiteLine = document.createElementNS(svgNS, 'path');
+                whiteLine.setAttribute('d', geom.borderPathData);
+                whiteLine.setAttribute('fill', 'none');
+                whiteLine.setAttribute('stroke', 'white');
+                whiteLine.setAttribute('stroke-width', '9');
+                whiteLine.setAttribute('stroke-linejoin', 'round');
+                whiteLine.setAttribute('clip-path', `url(#${clipId})`);
+                svg.appendChild(whiteLine);
+
+                // 黒の外側枠線（角丸パスを使用）
+                const blackLine = document.createElementNS(svgNS, 'path');
+                blackLine.setAttribute('d', geom.borderPathData);
+                blackLine.setAttribute('fill', 'none');
+                blackLine.setAttribute('stroke', 'black');
+                blackLine.setAttribute('stroke-width', '3');
+                blackLine.setAttribute('stroke-linejoin', 'round');
+                svg.appendChild(blackLine);
 
                 piece.appendChild(svg);
 
