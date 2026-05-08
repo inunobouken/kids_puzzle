@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // ボードのサイズに合わせて画像をフィットさせる（比率維持）
         const boardRect = puzzleBoard.getBoundingClientRect();
-        const padding = 40; // 枠外に置くための余白
+        const padding = 40; // 完成エリアのサイズを元に戻す
         const availableWidth = boardRect.width - padding * 2;
         const availableHeight = boardRect.height - padding * 2;
 
@@ -299,24 +299,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 const targetX = frameX + geom.bbox.x;
                 const targetY = frameY + geom.bbox.y;
 
-                // 初期配置：パズルフレーム（グレー部分）の外側に配置
+                // 初期配置：完成エリア（グレー部分）の外周にギリギリまで近づけて配置
                 let initX, initY;
-                let isInside = true;
-                
-                // フレームの外側になるまでランダム配置を試行
-                let attempts = 0;
-                while (isInside && attempts < 100) {
-                    initX = Math.random() * (boardRect.width - geom.bbox.w);
-                    initY = Math.random() * (boardRect.height - geom.bbox.h);
-                    
-                    // フレームの範囲内かチェック
-                    const inFrameX = initX + geom.bbox.w > frameX && initX < frameX + imgWidth;
-                    const inFrameY = initY + geom.bbox.h > frameY && initY < frameY + imgHeight;
-                    
-                    if (!(inFrameX && inFrameY)) {
-                        isInside = false;
-                    }
-                    attempts++;
+                const side = Math.floor(Math.random() * 4); // 0:上, 1:下, 2:左, 3:右
+                const range = 40; // 散らばる範囲（狭く設定）
+                const offset = 5; // 枠からの距離（ギリギリに設定）
+
+                if (side === 0) { // 上
+                    initX = frameX + Math.random() * imgWidth - geom.bbox.w / 2;
+                    initY = frameY - geom.bbox.h - Math.random() * range - offset;
+                } else if (side === 1) { // 下
+                    initX = frameX + Math.random() * imgWidth - geom.bbox.w / 2;
+                    initY = frameY + imgHeight + Math.random() * range + offset;
+                } else if (side === 2) { // 左
+                    initX = frameX - geom.bbox.w - Math.random() * range - offset;
+                    initY = frameY + Math.random() * imgHeight - geom.bbox.h / 2;
+                } else { // 右
+                    initX = frameX + imgWidth + Math.random() * range + offset;
+                    initY = frameY + Math.random() * imgHeight - geom.bbox.h / 2;
                 }
 
                 piece.style.left = `${initX}px`;
