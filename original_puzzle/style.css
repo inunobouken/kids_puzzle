@@ -229,16 +229,14 @@ header h1 {
     z-index: 1000;
 }
 
-/* 要件: 動かせる時の枠線 */
+/* 要件: 動かせる時のスタイル（枠線はSVGオーバーレイで描画） */
 .puzzle-piece.movable {
-    box-shadow: 
-        inset 0 0 0 2px white,
-        0 0 0 1px black;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25));
 }
 
 /* 要件: 固定された時の枠線消去 */
 .puzzle-piece.locked {
-    box-shadow: none;
+    filter: none;
     cursor: default;
     transition: all 0.3s ease-out;
 }
