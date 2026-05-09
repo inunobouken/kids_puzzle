@@ -14,18 +14,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const controls = document.querySelector('.controls');
 
     let imageSrc = null;
+    let loadedImage = null; // デコード済み画像を保持
 
     // 画像選択時の処理
     imageUpload.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
-            reader.onload = (event) => {
+            reader.onload = async (event) => {
                 imageSrc = event.target.result;
-                // お手本の表示更新
-                referenceImage.src = imageSrc;
-                referenceImage.classList.remove('hidden');
-                referencePlaceholder.classList.add('hidden');
+                
+                try {
+                    // 共通メソッドを使用して画像を読み込み・デコード
+                    // 失敗時は例外が投げられるため、catchブロックでエラー表示を行う
+                    loadedImage = await window.Puzzle.Engine.loadImage(imageSrc);
+                    
+                    // お手本の表示更新
+                    referenceImage.src = imageSrc;
+                    referenceImage.classList.remove('hidden');
+                    referencePlaceholder.classList.add('hidden');
+                } catch (error) {
+                    console.error("Image loading failed:", error);
+                    alert("よみこみしっぱい！　べつのしゃしんをえらんでね！");
+                    // 失敗時は状態をクリア
+                    imageSrc = null;
+                    loadedImage = null;
+                    imageUpload.value = ""; // 選択をリセット
+                }
             };
             reader.readAsDataURL(file);
         }
@@ -47,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // エンジンを起動
         window.Puzzle.Engine.initPuzzle({
             imageSrc,
+            image: loadedImage, // デコード済み画像を渡す
             rows,
             cols,
             puzzleBoard,

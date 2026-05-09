@@ -20,13 +20,25 @@
         timeouts: [], // 実行中のタイマーを管理
 
         /**
+         * 画像を読み込み、デコード完了を待機する共通メソッド
+         * 読み込みに失敗した場合は例外を投げるため、呼び出し側で適切にハンドリングすること
+         */
+        loadImage: async function(src) {
+            if (!src) return null;
+            const img = new Image();
+            img.src = src;
+            await img.decode();
+            return img;
+        },
+
+        /**
          * パズルを初期化する
          */
         initPuzzle: async function(config) {
             // 開始前に状態をリセット
             this.reset();
-
-            const { imageSrc, rows, cols, puzzleBoard, puzzleFrame, clearMessage } = config;
+ 
+            const { imageSrc, image, rows, cols, puzzleBoard, puzzleFrame, clearMessage } = config;
             this.imageSrc = imageSrc;
             this.pieces = [];
             this.config = config;
@@ -40,11 +52,20 @@
             window.Puzzle.UI.clearBoard(puzzleBoard, puzzleFrame);
             clearMessage.classList.add('hidden');
 
-            // 画像の読み込み待ち
-            const img = new Image();
-            img.src = imageSrc;
-            await img.decode();
-            this.sourceImg = img;
+            // 画像の読み込み待ち（既に渡されている場合でも安全のためにdecodeを確認）
+            if (image) {
+                try {
+                    // すでにオブジェクトがあるため、デコード完了を待機する
+                    await image.decode();
+                } catch (e) {
+                    // 失敗してもオブジェクト自体は有効な可能性があるため、ログだけ出して続行
+                    console.warn("Image decode failed or already in progress", e);
+                }
+                this.sourceImg = image;
+            } else {
+                // 画像がまだ準備されていない場合は、共通メソッドで読み込む（失敗時は例外を投げて処理を中断する）
+                this.sourceImg = await this.loadImage(imageSrc);
+            }
 
             this.setupResizeHandler();
             this.renderPuzzle(this.sourceImg);
