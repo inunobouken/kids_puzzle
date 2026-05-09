@@ -62,7 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // 設定パネルを再表示
         controls.classList.remove('hidden');
 
-        // ボードのみクリア
+        // ボードとエンジンの状態をクリア
+        window.Puzzle.Engine.reset();
         window.Puzzle.UI.clearBoard(puzzleBoard, puzzleFrame);
     });
 });

@@ -17,11 +17,15 @@
         sourceImg: null,
         edgeData: null,
         config: null,
+        timeouts: [], // 実行中のタイマーを管理
 
         /**
          * パズルを初期化する
          */
         initPuzzle: async function(config) {
+            // 開始前に状態をリセット
+            this.reset();
+
             const { imageSrc, rows, cols, puzzleBoard, puzzleFrame, clearMessage } = config;
             this.imageSrc = imageSrc;
             this.pieces = [];
@@ -32,7 +36,7 @@
             // 辺データの生成
             this.edgeData = window.Puzzle.Geometry.generateEdgeData(rows, cols);
 
-            // 盤面のクリーンアップ
+            // 盤面のクリーンアップ（UI側）
             window.Puzzle.UI.clearBoard(puzzleBoard, puzzleFrame);
             clearMessage.classList.add('hidden');
 
@@ -179,7 +183,7 @@
             pieceObj.element.classList.add('snap-outline');
             
             // アニメーション完了後にリセット
-            setTimeout(() => {
+            const tid = setTimeout(() => {
                 pieceObj.element.classList.remove('snap-flash');
                 // 完全に非表示にする（アニメーション後の状態を確定）
                 const paths = pieceObj.element.querySelectorAll('path:not(defs path)');
@@ -187,7 +191,29 @@
                 
                 // zIndex を確定（1 にする）
                 this.updateZIndices();
+                
+                // 完了したタイマーを配列から削除
+                this.timeouts = this.timeouts.filter(id => id !== tid);
             }, 600);
+
+            this.timeouts.push(tid);
+        },
+
+        /**
+         * エンジンの状態を完全にリセットする
+         */
+        reset: function() {
+            // 全ての実行中のタイマーをクリア
+            this.timeouts.forEach(tid => clearTimeout(tid));
+            this.timeouts = [];
+
+            // ピース配列をクリア
+            this.pieces = [];
+            
+            // その他内部データのクリア
+            this.vertices = [];
+            this.normalizedVertices = [];
+            this.edgeData = null;
         },
 
         /**
