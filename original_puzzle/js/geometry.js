@@ -17,6 +17,22 @@
         TAB_BASE_END: 0.60,   // タブの終了位置 (0.0 - 1.0)
         TAB_HEIGHT_FACTOR: 1.8, // 突出量の倍率
         TAB_BULGE_FACTOR: 0.8,  // 横方向の膨らみ倍率
+        CORNER_RADIUS: 3,       // ピース4隅の角丸半径
+
+        /**
+         * 2点間の位置を指定した距離(dist)だけ移動させた座標を返す
+         */
+        lerpPoints: function(p1, p2, dist) {
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const len = Math.sqrt(dx * dx + dy * dy);
+            if (len === 0) return { x: p1.x, y: p1.y };
+            const ratio = dist / len;
+            return {
+                x: p1.x + dx * ratio,
+                y: p1.y + dy * ratio
+            };
+        },
 
         /**
          * 全ての辺の凹凸データを生成する
@@ -47,7 +63,10 @@
          * 1辺のパス（ベジェ曲線による凹凸）を生成する
          */
         drawJigsawSide: function(p1, p2, type) {
-            if (type === 0) return `L ${p2.x},${p2.y} `;
+            const r = this.CORNER_RADIUS;
+            const end = this.lerpPoints(p2, p1, r);
+
+            if (type === 0) return `L ${end.x},${end.y} `;
 
             const dx = p2.x - p1.x;
             const dy = p2.y - p1.y;
@@ -92,7 +111,7 @@
             // tp1, tp2 の付け根はあえてカドにする
             return `L ${tp1.x},${tp1.y} ` +
                    `C ${cp1.x},${cp1.y} ${cp2.x},${cp2.y} ${tp2.x},${tp2.y} ` +
-                   `L ${p2.x},${p2.y} `;
+                   `L ${end.x},${end.y} `;
         },
 
         /**
@@ -226,12 +245,35 @@
             const local = (p) => ({ x: p.x - minX, y: p.y - minY });
             const ltl = local(tl), ltr = local(tr), lbr = local(br), lbl = local(bl);
 
-            // パスの構築
-            let d = `M ${ltl.x},${ltl.y} `;
+            // 角丸を考慮したパスの構築
+            const r_val = this.CORNER_RADIUS;
+            const ltl_start = this.lerpPoints(ltl, ltr, r_val);
+            
+            let d = `M ${ltl_start.x},${ltl_start.y} `;
+            
+            // 上辺
             d += this.drawJigsawSide(ltl, ltr, typeT);
+            // 右上角
+            const tr_start = this.lerpPoints(ltr, lbr, r_val);
+            d += `Q ${ltr.x},${ltr.y} ${tr_start.x},${tr_start.y} `;
+            
+            // 右辺
             d += this.drawJigsawSide(ltr, lbr, typeR);
+            // 右下角
+            const br_start = this.lerpPoints(lbr, lbl, r_val);
+            d += `Q ${lbr.x},${lbr.y} ${br_start.x},${br_start.y} `;
+            
+            // 下辺
             d += this.drawJigsawSide(lbr, lbl, typeB);
+            // 左下角
+            const bl_start = this.lerpPoints(lbl, ltl, r_val);
+            d += `Q ${lbl.x},${lbl.y} ${bl_start.x},${bl_start.y} `;
+            
+            // 左辺
             d += this.drawJigsawSide(lbl, ltl, typeL);
+            // 左上角
+            d += `Q ${ltl.x},${ltl.y} ${ltl_start.x},${ltl_start.y} `;
+            
             d += "Z";
 
             // clip-path 用のポリゴン（近似）または SVG path を使用する
