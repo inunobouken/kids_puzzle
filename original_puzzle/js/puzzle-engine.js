@@ -49,14 +49,16 @@
             const boardRect = puzzleBoard.getBoundingClientRect();
             this.baseBoardSize = { w: boardRect.width, h: boardRect.height };
             
-            // レスポンシブなパディング計算
-            const padding = Math.max(15, Math.min(40, boardRect.width * 0.05));
-            const availableWidth = boardRect.width - padding * 2;
-            const availableHeight = boardRect.height - padding * 2;
-            const ratio = Math.min(availableWidth / img.width, availableHeight / img.height);
+            // サイズ計算の共通処理呼び出し
+            const fit = window.Puzzle.Geometry.calculateFitSize(
+                boardRect.width, 
+                boardRect.height, 
+                img.naturalWidth, 
+                img.naturalHeight
+            );
             
-            this.imgWidth = img.width * ratio;
-            this.imgHeight = img.height * ratio;
+            this.imgWidth = fit.w;
+            this.imgHeight = fit.h;
 
             // フレームサイズ設定
             puzzleFrame.style.width = `${this.imgWidth}px`;
@@ -230,26 +232,17 @@
             
             if (!this.sourceImg) return;
 
-            // paddingの再計算
-            const padding = Math.max(15, Math.min(40, boardRect.width * 0.05));
-            const availableWidth = boardRect.width - padding * 2;
-            const availableHeight = boardRect.height - padding * 2;
-            
-            // 保持している sourceImg から正確なアスペクト比を取得
-            const naturalRatio = this.sourceImg.naturalWidth / this.sourceImg.naturalHeight;
-            let newImgW, newImgH;
-            
-            if (availableWidth / availableHeight > naturalRatio) {
-                newImgH = availableHeight;
-                newImgW = availableHeight * naturalRatio;
-            } else {
-                newImgW = availableWidth;
-                newImgH = availableWidth / naturalRatio;
-            }
+            // サイズ計算の共通処理呼び出し
+            const fit = window.Puzzle.Geometry.calculateFitSize(
+                boardRect.width, 
+                boardRect.height, 
+                this.sourceImg.naturalWidth, 
+                this.sourceImg.naturalHeight
+            );
 
-            const scale = newImgW / this.imgWidth;
-            this.imgWidth = newImgW;
-            this.imgHeight = newImgH;
+            const scale = fit.w / this.imgWidth;
+            this.imgWidth = fit.w;
+            this.imgHeight = fit.h;
 
             // フレーム更新
             puzzleFrame.style.width = `${this.imgWidth}px`;

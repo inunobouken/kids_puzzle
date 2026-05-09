@@ -9,6 +9,26 @@
         JITTER_RATIO_X: 0.25,
         JITTER_RATIO_Y: 0.25,
         DEFAULT_RADIUS: 10,
+        MIN_PADDING: 15,
+        MAX_PADDING: 40,
+        PADDING_RATIO: 0.05,
+
+        /**
+         * ボードのサイズに合わせて画像をフィットさせるサイズを計算する
+         */
+        calculateFitSize: function(boardW, boardH, imgW, imgH) {
+            const padding = Math.max(this.MIN_PADDING, Math.min(this.MAX_PADDING, boardW * this.PADDING_RATIO));
+            const availW = boardW - padding * 2;
+            const availH = boardH - padding * 2;
+            
+            const ratio = Math.min(availW / imgW, availH / imgH);
+            
+            return {
+                w: imgW * ratio,
+                h: imgH * ratio,
+                padding: padding
+            };
+        },
 
         /**
          * グリッド頂点を生成する。
