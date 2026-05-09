@@ -158,18 +158,15 @@
             pieceObj.relX = pieceObj.targetX / boardRect.width;
             pieceObj.relY = pieceObj.targetY / boardRect.height;
             
-            // 演出：本体フラッシュ境界線徐々に削除の組み合わせ
-            pieceObj.element.classList.add('snap-flash');
-            
+            // 境界線を表示したまま演出を開始
             const borderSvg = pieceObj.element.querySelector('.piece-border-svg');
             if (borderSvg) {
                 borderSvg.classList.add('snap-outline');
-                // アニメーション完了後にリセット
+                // アニメーション完了後に非表示にする
                 setTimeout(() => {
                     borderSvg.style.display = 'none';
                     borderSvg.classList.remove('snap-outline');
-                    pieceObj.element.classList.remove('snap-flash');
-                }, 600);
+                }, 800);
             }
         },
 

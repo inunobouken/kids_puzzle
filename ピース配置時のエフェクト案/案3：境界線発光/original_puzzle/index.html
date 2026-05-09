@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ジグソーパズル</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>🧩 ジグソーパズル！</h1>
+        </header>
+
+        <main>
+            <section class="controls card">
+                <div class="control-group">
+                    <label for="image-upload" class="upload-label">
+                        <span>📸 しゃしんをえらぶ</span>
+                        <input type="file" id="image-upload" accept="image/*">
+                    </label>
+                </div>
+
+                <div class="settings">
+                    <div class="setting-item">
+                        <label for="rows">よこ（ピース）</label>
+                        <input type="number" id="cols" value="3" min="2" max="10">
+                    </div>
+                    <div class="setting-item">
+                        <label for="cols">たて（ピース）</label>
+                        <input type="number" id="rows" value="4" min="2" max="10">
+                    </div>
+                </div>
+
+                <button id="start-btn" class="primary-btn">スタート！ 🚀</button>
+            </section>
+
+            <section id="game-area" class="game-area card">
+                <div class="game-layout">
+                    <aside class="reference-panel">
+                        <h3>🖼️ おてほん</h3>
+                        <div id="reference-image-container" class="reference-container">
+                            <img id="reference-image" src="" alt="おてほん" class="hidden">
+                            <p id="reference-placeholder">しゃしんをえらぶと、ここにでるよ！</p>
+                        </div>
+                    </aside>
+                    
+                    <div class="main-puzzle-area">
+                        <h3>🧩 パズルボード</h3>
+                        <div id="puzzle-board" class="puzzle-board">
+                            <!-- パズルの正解エリア -->
+                            <div id="puzzle-frame" class="puzzle-frame"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <div id="clear-message" class="modal hidden">
+            <div class="modal-content">
+                <h2>🎉 かんせい！ 🎉</h2>
+                <p>おめでとう！</p>
+                <button id="restart-btn" class="secondary-btn">もういっかい あそぶ</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/geometry.js"></script>
+    <script src="js/ui-renderer.js"></script>
+    <script src="js/event-handler.js"></script>
+    <script src="js/puzzle-engine.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

@@ -158,19 +158,17 @@
             pieceObj.relX = pieceObj.targetX / boardRect.width;
             pieceObj.relY = pieceObj.targetY / boardRect.height;
             
-            // 演出：本体フラッシュ境界線徐々に削除の組み合わせ
+            const borderSvg = pieceObj.element.querySelector('.piece-border-svg');
+            if (borderSvg) borderSvg.style.display = 'none';
+            
+            // 演出：案1（フラッシュ）
             pieceObj.element.classList.add('snap-flash');
             
-            const borderSvg = pieceObj.element.querySelector('.piece-border-svg');
-            if (borderSvg) {
-                borderSvg.classList.add('snap-outline');
-                // アニメーション完了後にリセット
-                setTimeout(() => {
-                    borderSvg.style.display = 'none';
-                    borderSvg.classList.remove('snap-outline');
-                    pieceObj.element.classList.remove('snap-flash');
-                }, 600);
-            }
+            // アニメーション完了後にクラスを削除（再利用できるようにするため。
+            // ただし locked なので再利用は基本ないが、念のため）
+            setTimeout(() => {
+                pieceObj.element.classList.remove('snap-flash');
+            }, 600);
         },
 
         /**

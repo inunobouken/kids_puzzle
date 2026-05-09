@@ -158,7 +158,7 @@
             pieceObj.relX = pieceObj.targetX / boardRect.width;
             pieceObj.relY = pieceObj.targetY / boardRect.height;
             
-            // 演出：本体フラッシュ境界線徐々に削除の組み合わせ
+            // 演出：案1（本体フラッシュ）と案3（境界線）の組み合わせ
             pieceObj.element.classList.add('snap-flash');
             
             const borderSvg = pieceObj.element.querySelector('.piece-border-svg');
