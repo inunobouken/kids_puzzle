@@ -169,6 +169,8 @@
                     borderSvg.style.display = 'none';
                     borderSvg.classList.remove('snap-outline');
                     pieceObj.element.classList.remove('snap-flash');
+                    // zIndex を確定（1 にする）
+                    this.updateZIndices();
                 }, 600);
             }
         },
@@ -193,7 +195,7 @@
          */
         updateZIndices: function() {
             this.pieces.forEach((p, i) => {
-                // ロックされたピースは zIndex 1 固定、それ以外は 10 からの連番
+                // ロックされたピースは zIndex 1 固定（未配置ピースの下に回り込むように）、それ以外は 10 からの連番
                 p.element.style.zIndex = p.isLocked ? 1 : i + 10;
             });
         },
