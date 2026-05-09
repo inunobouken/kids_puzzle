@@ -24,6 +24,7 @@ body {
     align-items: center;
     min-height: 100vh;
     padding: 20px;
+    overscroll-behavior: none; /* バウンススクロールを防止 */
 }
 
 .app-container {
