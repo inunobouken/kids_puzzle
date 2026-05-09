@@ -13,6 +13,10 @@
          * ガイドラインをcanvasに描画
          */
         drawGuideLines: function(puzzleFrame, vertices, rows, cols, displayW, displayH) {
+            // 既存のキャンバスを削除
+            const existingCanvas = puzzleFrame.querySelector('canvas');
+            if (existingCanvas) existingCanvas.remove();
+
             const dpr = window.devicePixelRatio || 1;
             const canvas = document.createElement('canvas');
             canvas.width = displayW * dpr;
@@ -133,6 +137,36 @@
             
             const canvas = puzzleFrame.querySelector('canvas');
             if (canvas) canvas.remove();
+        },
+
+        /**
+         * ピース要素をスケーリングする
+         */
+        updatePieceElement: function(pieceEl, scale, imgWidth, imgHeight) {
+            // 現在のサイズを取得してスケール
+            const curW = parseFloat(pieceEl.style.width);
+            const curH = parseFloat(pieceEl.style.height);
+            pieceEl.style.width = `${curW * scale}px`;
+            pieceEl.style.height = `${curH * scale}px`;
+
+            // 画像レイヤーの更新
+            const imageLayer = pieceEl.firstChild;
+            if (imageLayer) {
+                imageLayer.style.backgroundSize = `${imgWidth}px ${imgHeight}px`;
+                const curPosX = parseFloat(imageLayer.style.backgroundPositionX);
+                const curPosY = parseFloat(imageLayer.style.backgroundPositionY);
+                imageLayer.style.backgroundPosition = `${curPosX * scale}px ${curPosY * scale}px`;
+            }
+
+            // SVGの更新
+            const svg = pieceEl.querySelector('svg');
+            if (svg) {
+                const curSvgW = parseFloat(svg.getAttribute('width'));
+                const curSvgH = parseFloat(svg.getAttribute('height'));
+                svg.setAttribute('width', curSvgW * scale);
+                svg.setAttribute('height', curSvgH * scale);
+                // viewBox はそのまま（中身が自動でスケールされる）
+            }
         }
     };
 })();

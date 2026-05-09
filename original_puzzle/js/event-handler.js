@@ -57,6 +57,10 @@
 
             this.activePiece.element.style.left = `${x}px`;
             this.activePiece.element.style.top = `${y}px`;
+
+            // 相対位置を更新
+            this.activePiece.relX = x / boardRect.width;
+            this.activePiece.relY = y / boardRect.height;
         },
 
         onPointerUp: function(e, onSnap, onComplete) {
