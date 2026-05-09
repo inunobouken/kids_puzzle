@@ -172,10 +172,6 @@ header h1 {
     object-fit: contain;
 }
 
-.reference-container img.hidden {
-    display: none;
-}
-
 #reference-placeholder {
     padding: 20px;
     text-align: center;
@@ -241,7 +237,10 @@ header h1 {
     transition: all 0.3s ease-out;
 }
 
-/* モーダル */
+.hidden {
+    display: none !important;
+}
+
 .modal {
     position: fixed;
     top: 0;
@@ -253,10 +252,6 @@ header h1 {
     justify-content: center;
     align-items: center;
     z-index: 2000;
-}
-
-.modal.hidden {
-    display: none;
 }
 
 .modal-content {

@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearMessage = document.getElementById('clear-message');
     const restartBtn = document.getElementById('restart-btn');
 
+    const controls = document.querySelector('.controls');
+
     let imageSrc = null;
 
     // 画像選択時の処理
@@ -39,6 +41,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const rows = parseInt(rowsInput.value);
         const cols = parseInt(colsInput.value);
 
+        // 設定パネルを隠す
+        controls.classList.add('hidden');
+
         // エンジンを起動
         window.Puzzle.Engine.initPuzzle({
             imageSrc,
@@ -53,6 +58,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // リスタート（もういっかい）ボタン
     restartBtn.addEventListener('click', () => {
         clearMessage.classList.add('hidden');
+        
+        // 設定パネルを再表示
+        controls.classList.remove('hidden');
+
         // ボードのみクリア
         window.Puzzle.UI.clearBoard(puzzleBoard, puzzleFrame);
     });
