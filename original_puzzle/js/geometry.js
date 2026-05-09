@@ -169,40 +169,6 @@
         },
 
         /**
-         * 頂点の配列から角の丸まったSVGパス文字列(d属性用)を生成する
-         */
-        generateRoundedPath: function(points, radius) {
-            if (points.length < 3) return "";
-            let d = "";
-            for (let i = 0; i < points.length; i++) {
-                const p1 = points[(i + points.length - 1) % points.length];
-                const p2 = points[i];
-                const p3 = points[(i + 1) % points.length];
-
-                const v1 = { x: p1.x - p2.x, y: p1.y - p2.y };
-                const v2 = { x: p3.x - p2.x, y: p3.y - p2.y };
-                const l1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
-                const l2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
-                
-                const r = Math.min(radius, l1 / 2, l2 / 2);
-                
-                const n1 = { x: v1.x / l1, y: v1.y / l1 };
-                const n2 = { x: v2.x / l2, y: v2.y / l2 };
-
-                const q1 = { x: p2.x + n1.x * r, y: p2.y + n1.y * r };
-                const q2 = { x: p2.x + n2.x * r, y: p2.y + n2.y * r };
-
-                if (i === 0) {
-                    d += `M ${q1.x},${q1.y} `;
-                } else {
-                    d += `L ${q1.x},${q1.y} `;
-                }
-                d += `Q ${p2.x},${p2.y} ${q2.x},${q2.y} `;
-            }
-            return d + "Z";
-        },
-
-        /**
          * ピースのバウンディングボックスと描画パスを計算
          */
         computePieceGeometry: function(vertices, r, c, edgeData) {

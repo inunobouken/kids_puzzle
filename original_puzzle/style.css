@@ -272,6 +272,15 @@ header h1 {
     }
 }
 
+.guide-fade-out {
+    animation: guide-fade-out-anim 0.8s ease-out forwards;
+}
+
+@keyframes guide-fade-out-anim {
+    0% { opacity: 1; stroke-dashoffset: 0; }
+    100% { opacity: 0; stroke-dashoffset: 20; }
+}
+
 .hidden {
     display: none !important;
 }

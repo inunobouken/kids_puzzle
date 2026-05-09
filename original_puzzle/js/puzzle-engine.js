@@ -220,6 +220,9 @@
             pieceObj.element.classList.add('snap-flash');
             pieceObj.element.classList.add('snap-outline');
             
+            // ガイドラインを消す
+            window.Puzzle.UI.fadeGuideLines(this.config.puzzleFrame, pieceObj.r, pieceObj.c);
+            
             // アニメーション完了後にリセット
             const tid = setTimeout(() => {
                 pieceObj.element.classList.remove('snap-flash');

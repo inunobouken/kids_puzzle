@@ -42,31 +42,56 @@
                 return path;
             };
 
-            // 横方向の線（行の区切り）
+            // 横方向の線（行の区切りをピース単位で描画）
             for (let r = 1; r < rows; r++) {
-                let d = `M ${vertices[r][0].x},${vertices[r][0].y} `;
                 for (let c = 0; c < cols; c++) {
                     const p1 = vertices[r][c];
                     const p2 = vertices[r][c + 1];
-                    // 下のピース（r, c）の上面の形状に合わせる
                     const type = horizontalEdges[r - 1][c] * -1;
-                    d += window.Puzzle.Geometry.drawJigsawSide(p1, p2, type);
+                    const d = `M ${p1.x},${p1.y} ` + window.Puzzle.Geometry.drawJigsawSide(p1, p2, type);
+                    const path = createPath(d);
+                    path.classList.add(`edge-h-${r}-${c}`);
+                    svg.appendChild(path);
                 }
-                svg.appendChild(createPath(d));
             }
 
-            // 縦方向の線（列の区切り）
+            // 縦方向の線（列の区切りをピース単位で描画）
             for (let c = 1; c < cols; c++) {
-                let d = `M ${vertices[0][c].x},${vertices[0][c].y} `;
                 for (let r = 0; r < rows; r++) {
                     const p1 = vertices[r][c];
                     const p2 = vertices[r + 1][c];
-                    // 右のピース（r, c）の左面の形状に合わせる
                     const type = verticalEdges[r][c - 1]; 
-                    d += window.Puzzle.Geometry.drawJigsawSide(p1, p2, type);
+                    const d = `M ${p1.x},${p1.y} ` + window.Puzzle.Geometry.drawJigsawSide(p1, p2, type);
+                    const path = createPath(d);
+                    path.classList.add(`edge-v-${r}-${c}`);
+                    svg.appendChild(path);
                 }
-                svg.appendChild(createPath(d));
             }
+        },
+
+        /**
+         * 特定のピース位置に隣接するガイドラインをフェードアウトさせる
+         */
+        fadeGuideLines: function(puzzleFrame, r, c) {
+            const svg = puzzleFrame.querySelector('.guide-svg');
+            if (!svg) return;
+
+            // 隣接する4辺（上、下、左、右）のクラス名
+            const targetClasses = [
+                `.edge-h-${r}-${c}`,       // 上
+                `.edge-h-${r+1}-${c}`,     // 下
+                `.edge-v-${r}-${c}`,       // 左
+                `.edge-v-${r}-${c+1}`      // 右
+            ];
+
+            targetClasses.forEach(selector => {
+                const paths = svg.querySelectorAll(selector);
+                paths.forEach(p => {
+                    if (!p.classList.contains('guide-fade-out')) {
+                        p.classList.add('guide-fade-out');
+                    }
+                });
+            });
         },
 
         /**
