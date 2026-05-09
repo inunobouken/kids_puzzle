@@ -46,6 +46,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // タッチ操作中の長押しメニュー（コンテキストメニュー）を防止
+    puzzleBoard.addEventListener('contextmenu', (e) => e.preventDefault());
+
     // スタートボタン
     startBtn.addEventListener('click', () => {
         if (!imageSrc) {

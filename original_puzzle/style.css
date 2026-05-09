@@ -197,6 +197,8 @@ header h1 {
     border: 2px dashed #ddd;
     overflow: visible; /* ピースが枠外に出られるように */
     min-height: 400px;
+    user-select: none;  /* テキスト選択を防止 */
+    /* touch-action はデフォルトのまま（ピース以外を触ればスクロール可能にする） */
 }
 
 /* 正解の位置（グレーの背景） */
@@ -216,14 +218,15 @@ header h1 {
     cursor: grab;
     touch-action: none;
     user-select: none;
-    transition: transform 0.1s;
+    transition: transform 0.15s ease, filter 0.15s ease;
     z-index: 10;
+    will-change: transform, left, top; /* パフォーマンス最適化 */
 }
 
 .puzzle-piece:active {
     cursor: grabbing;
-    transform: scale(1.05);
-    z-index: 1000;
+    transform: scale(1.03); /* わずかに浮かせる */
+    filter: drop-shadow(0 15px 30px rgba(0,0,0,0.4)); /* 影を深くして浮遊感を出す */
 }
 
 /* 要件: 動かせる時のスタイル（枠線はSVGオーバーレイで描画） */
