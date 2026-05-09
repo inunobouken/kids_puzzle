@@ -9,6 +9,7 @@
         activePiece: null,
         offset: { x: 0, y: 0 },
         cachedBoardRect: null,
+        activePointerId: null, // キャプチャ解放用に保存
 
         /**
          * ピースにドラッグイベントを登録する
@@ -20,6 +21,7 @@
 
                 this.isDragging = true;
                 this.activePiece = pieceObj;
+                this.activePointerId = e.pointerId;
                 this.activePiece.element.setPointerCapture(e.pointerId);
 
                 const rect = this.activePiece.element.getBoundingClientRect();
@@ -93,10 +95,27 @@
 
             this.activePiece.element.releasePointerCapture(e.pointerId);
             
+            if (onComplete) onComplete();
+        },
+
+        /**
+         * ドラッグを強制的に終了する（リサイズ時などに使用）
+         */
+        cancelDrag: function() {
+            if (!this.isDragging || !this.activePiece) return;
+
+            // ポインターキャプチャを解放
+            if (this.activePointerId !== null) {
+                try {
+                    this.activePiece.element.releasePointerCapture(this.activePointerId);
+                } catch (e) {}
+            }
+
+            // 状態をリセット
+            // これにより、すでに登録されている moveHandler と upHandler が実質的に無効化される
             this.isDragging = false;
             this.activePiece = null;
-
-            if (onComplete) onComplete();
+            this.activePointerId = null;
         }
     };
 })();

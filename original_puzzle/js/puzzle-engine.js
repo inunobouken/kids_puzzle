@@ -273,6 +273,9 @@
             
             let timeout;
             this.resizeListener = () => {
+                // リサイズが始まった瞬間にドラッグを強制終了（座標の不整合を防ぐ）
+                window.Puzzle.Events.cancelDrag();
+
                 clearTimeout(timeout);
                 timeout = setTimeout(() => this.handleResize(), 200);
             };
