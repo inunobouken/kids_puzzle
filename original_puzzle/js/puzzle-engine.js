@@ -38,10 +38,9 @@
         initPuzzle: async function(config) {
             // 開始前に状態をリセット
             this.reset();
- 
+
             const { imageSrc, image, rows, cols, puzzleBoard, puzzleFrame, clearMessage } = config;
             this.imageSrc = imageSrc;
-            this.pieces = [];
             this.config = config;
             this.rows = rows;
             this.cols = cols;
@@ -68,14 +67,17 @@
                 this.sourceImg = await this.loadImage(imageSrc);
             }
 
+            // レイアウトの計算とピースの生成
+            this.refreshLayout();
+            this.createPieces();
             this.setupResizeHandler();
-            this.renderPuzzle(this.sourceImg);
         },
 
         /**
-         * パズルの描画（初回およびリサイズ時に使用）
+         * ボードやフレームのサイズ、頂点情報を現在の状況に合わせて更新する
+         * （初期化時およびリサイズ時の共通処理）
          */
-        renderPuzzle: function(img) {
+        refreshLayout: function() {
             const { rows, cols, puzzleBoard, puzzleFrame } = this.config;
             const boardRect = puzzleBoard.getBoundingClientRect();
             this.baseBoardSize = { w: boardRect.width, h: boardRect.height };
@@ -84,27 +86,41 @@
             const fit = window.Puzzle.Geometry.calculateFitSize(
                 boardRect.width, 
                 boardRect.height, 
-                img.naturalWidth, 
-                img.naturalHeight
+                this.sourceImg.naturalWidth, 
+                this.sourceImg.naturalHeight
             );
             
             this.imgWidth = fit.w;
             this.imgHeight = fit.h;
 
-            // フレームサイズ設定
+            // フレームサイズの更新
             puzzleFrame.style.width = `${this.imgWidth}px`;
             puzzleFrame.style.height = `${this.imgHeight}px`;
 
-            // 幾何計算
-            this.vertices = window.Puzzle.Geometry.generateGridVertices(rows, cols, this.imgWidth, this.imgHeight);
-            
-            // 誤差累積防止のため、初期状態の正規化頂点（0.0～1.0）を保存
-            this.normalizedVertices = this.vertices.map(row => 
-                row.map(v => ({ x: v.x / this.imgWidth, y: v.y / this.imgHeight }))
-            );
+            // 頂点の計算
+            if (this.normalizedVertices.length === 0) {
+                // 初回：ランダムな頂点を生成し、正規化データを保存
+                this.vertices = window.Puzzle.Geometry.generateGridVertices(rows, cols, this.imgWidth, this.imgHeight);
+                this.normalizedVertices = this.vertices.map(row => 
+                    row.map(v => ({ x: v.x / this.imgWidth, y: v.y / this.imgHeight }))
+                );
+            } else {
+                // リサイズ時：正規化データから現在のサイズに復元（誤差累積防止）
+                this.vertices = this.normalizedVertices.map(row => 
+                    row.map(v => ({ x: v.x * this.imgWidth, y: v.y * this.imgHeight }))
+                );
+            }
 
+            // ガイドライン描画
             window.Puzzle.UI.drawGuideLines(puzzleFrame, this.vertices, rows, cols, this.imgWidth, this.imgHeight, this.edgeData);
+        },
 
+        /**
+         * ピースを新規生成してボードに配置する（初回のみ）
+         */
+        createPieces: function() {
+            const { rows, cols, puzzleBoard } = this.config;
+            const boardRect = puzzleBoard.getBoundingClientRect();
             const frameX = (boardRect.width - this.imgWidth) / 2;
             const frameY = (boardRect.height - this.imgHeight) / 2;
 
@@ -251,7 +267,7 @@
         },
 
         /**
-         * 全ピースの zIndex を初期状態（またはリサイズ後）に設定する
+         * 全ピースの zIndex を初期状態に設定する（ピース生成直後に実行）
          */
         updateZIndices: function() {
             this.maxZIndex = 100;
@@ -289,66 +305,18 @@
          * 実際のサイズ更新処理
          */
         handleResize: function() {
-            if (!this.config || !this.pieces.length) return;
+            if (!this.config || !this.pieces.length || !this.sourceImg) return;
 
-            const { rows, cols, puzzleBoard, puzzleFrame } = this.config;
+            const { puzzleBoard } = this.config;
             const boardRect = puzzleBoard.getBoundingClientRect();
             
-            if (!this.sourceImg) return;
+            // レイアウトを更新（共通処理）
+            this.refreshLayout();
 
-            // サイズ計算の共通処理呼び出し
-            const fit = window.Puzzle.Geometry.calculateFitSize(
-                boardRect.width, 
-                boardRect.height, 
-                this.sourceImg.naturalWidth, 
-                this.sourceImg.naturalHeight
-            );
-
-            const scale = fit.w / this.imgWidth;
-            this.imgWidth = fit.w;
-            this.imgHeight = fit.h;
-
-            // フレーム更新
-            puzzleFrame.style.width = `${this.imgWidth}px`;
-            puzzleFrame.style.height = `${this.imgHeight}px`;
-
-            // 頂点の再スケーリング（正規化データから計算することで誤差の累積を防ぐ）
-            this.vertices = this.normalizedVertices.map(row => 
-                row.map(v => ({ x: v.x * this.imgWidth, y: v.y * this.imgHeight }))
-            );
-
-            // ガイドライン再描画
-            window.Puzzle.UI.drawGuideLines(puzzleFrame, this.vertices, rows, cols, this.imgWidth, this.imgHeight, this.edgeData);
-
+            // ピースの位置と形状を更新
             const frameX = (boardRect.width - this.imgWidth) / 2;
             const frameY = (boardRect.height - this.imgHeight) / 2;
 
-            // 各ピースの更新
-            this.pieces.forEach(p => {
-                if (!p.isLocked) {
-                    // 未ロックの場合は現在の相対位置を維持して移動
-                    const newX = p.relX * boardRect.width - 0.5;
-                    const newY = p.relY * boardRect.height - 0.5;
-                    p.element.style.left = `${newX}px`;
-                    p.element.style.top = `${newY}px`;
-                }
-            });
-
-            // 基準値を更新
-            this.baseBoardSize = { w: boardRect.width, h: boardRect.height };
-            
-            // ターゲット座標を正しく再設定（全ピース一括）
-            this.recalculateTargets(boardRect);
-        },
-
-        /**
-         * 全ピースのターゲット座標を現在のボードサイズに合わせて再計算
-         */
-        recalculateTargets: function(boardRect) {
-            const frameX = (boardRect.width - this.imgWidth) / 2;
-            const frameY = (boardRect.height - this.imgHeight) / 2;
-            
-            // 全ピースに対して新しいターゲットを計算
             this.pieces.forEach(p => {
                 const geom = window.Puzzle.Geometry.computePieceGeometry(this.vertices, p.r, p.c, this.edgeData);
                 
@@ -367,6 +335,11 @@
                     p.element.style.top = `${p.targetY}px`;
                     p.relX = p.targetX / boardRect.width;
                     p.relY = p.targetY / boardRect.height;
+                } else {
+                    const newX = p.relX * boardRect.width - 0.5;
+                    const newY = p.relY * boardRect.height - 0.5;
+                    p.element.style.left = `${newX}px`;
+                    p.element.style.top = `${newY}px`;
                 }
             });
         },
