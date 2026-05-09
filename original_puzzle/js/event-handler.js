@@ -8,6 +8,7 @@
         isDragging: false,
         activePiece: null,
         offset: { x: 0, y: 0 },
+        cachedBoardRect: null,
 
         /**
          * ピースにドラッグイベントを登録する
@@ -25,6 +26,9 @@
                 this.offset.x = e.clientX - rect.left;
                 this.offset.y = e.clientY - rect.top;
 
+                // ボードの矩形情報をキャッシュ
+                this.cachedBoardRect = puzzleBoard.getBoundingClientRect();
+
                 // 最前面に移動
                 window.Puzzle.Engine.bringPieceToFront(this.activePiece);
 
@@ -41,10 +45,10 @@
         },
 
         onPointerMove: function(e, puzzleBoard) {
-            if (!this.isDragging || !this.activePiece) return;
+            if (!this.isDragging || !this.activePiece || !this.cachedBoardRect) return;
             e.preventDefault();
 
-            const boardRect = puzzleBoard.getBoundingClientRect();
+            const boardRect = this.cachedBoardRect;
             let x = e.clientX - boardRect.left - this.offset.x;
             let y = e.clientY - boardRect.top - this.offset.y;
 
