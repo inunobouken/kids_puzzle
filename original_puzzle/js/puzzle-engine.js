@@ -12,6 +12,7 @@
         rows: 0,
         cols: 0,
         vertices: [],
+        normalizedVertices: [],
         baseBoardSize: { w: 0, h: 0 },
         sourceImg: null,
         config: null,
@@ -66,6 +67,12 @@
 
             // 幾何計算
             this.vertices = window.Puzzle.Geometry.generateGridVertices(rows, cols, this.imgWidth, this.imgHeight);
+            
+            // 誤差累積防止のため、初期状態の正規化頂点（0.0～1.0）を保存
+            this.normalizedVertices = this.vertices.map(row => 
+                row.map(v => ({ x: v.x / this.imgWidth, y: v.y / this.imgHeight }))
+            );
+
             window.Puzzle.UI.drawGuideLines(puzzleFrame, this.vertices, rows, cols, this.imgWidth, this.imgHeight);
 
             const frameX = (boardRect.width - this.imgWidth) / 2;
@@ -248,9 +255,9 @@
             puzzleFrame.style.width = `${this.imgWidth}px`;
             puzzleFrame.style.height = `${this.imgHeight}px`;
 
-            // 頂点の再スケーリング
-            this.vertices = this.vertices.map(row => 
-                row.map(v => ({ x: v.x * scale, y: v.y * scale }))
+            // 頂点の再スケーリング（正規化データから計算することで誤差の累積を防ぐ）
+            this.vertices = this.normalizedVertices.map(row => 
+                row.map(v => ({ x: v.x * this.imgWidth, y: v.y * this.imgHeight }))
             );
 
             // ガイドライン再描画
