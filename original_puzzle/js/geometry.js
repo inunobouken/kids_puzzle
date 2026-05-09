@@ -13,6 +13,10 @@
         MAX_PADDING: 40,
         PADDING_RATIO: 0.05,
         TAB_SIZE_RATIO: 0.20, // ピースサイズに対するタブの大きさ
+        TAB_BASE_START: 0.40, // タブの開始位置 (0.0 - 1.0)
+        TAB_BASE_END: 0.60,   // タブの終了位置 (0.0 - 1.0)
+        TAB_HEIGHT_FACTOR: 1.8, // 突出量の倍率
+        TAB_BULGE_FACTOR: 0.8,  // 横方向の膨らみ倍率
 
         /**
          * 全ての辺の凹凸データを生成する
@@ -57,9 +61,15 @@
             const tabSize = length * this.TAB_SIZE_RATIO;
             
             // 単一の3次ベジェ曲線で「ぷっくりとした円形」を描画する
-            // 1. タブの開始点と終了点 (辺の 40% から 60% の位置)
-            const tp1 = { x: p1.x + dx * 0.40, y: p1.y + dy * 0.40 };
-            const tp2 = { x: p1.x + dx * 0.60, y: p1.y + dy * 0.60 };
+            // 1. タブの開始点と終了点
+            const tp1 = { 
+                x: p1.x + dx * this.TAB_BASE_START, 
+                y: p1.y + dy * this.TAB_BASE_START 
+            };
+            const tp2 = { 
+                x: p1.x + dx * this.TAB_BASE_END, 
+                y: p1.y + dy * this.TAB_BASE_END 
+            };
 
             // 2. 制御点の計算 (開始点・終了点よりさらに外側に振ることで丸みを作る)
             // ux, uy: 辺の単位方向ベクトル
@@ -68,14 +78,14 @@
             
             // cp1: tp1 から「戻る方向」かつ「外側」にオフセット
             const cp1 = {
-                x: tp1.x - ux * tabSize * 0.8 + nx * tabSize * 2.0,
-                y: tp1.y - uy * tabSize * 0.8 + ny * tabSize * 2.0
+                x: tp1.x - ux * tabSize * this.TAB_BULGE_FACTOR + nx * tabSize * this.TAB_HEIGHT_FACTOR,
+                y: tp1.y - uy * tabSize * this.TAB_BULGE_FACTOR + ny * tabSize * this.TAB_HEIGHT_FACTOR
             };
             
             // cp2: tp2 から「進む方向」かつ「外側」にオフセット
             const cp2 = {
-                x: tp2.x + ux * tabSize * 0.8 + nx * tabSize * 2.0,
-                y: tp2.y + uy * tabSize * 0.8 + ny * tabSize * 2.0
+                x: tp2.x + ux * tabSize * this.TAB_BULGE_FACTOR + nx * tabSize * this.TAB_HEIGHT_FACTOR,
+                y: tp2.y + uy * tabSize * this.TAB_BULGE_FACTOR + ny * tabSize * this.TAB_HEIGHT_FACTOR
             };
 
             // 直線 -> 単一ベジェ曲線 -> 直線
@@ -196,7 +206,7 @@
             // 凹凸の飛び出し分を含めたバウンディングボックスの計算
             // タブのサイズを計算 (辺の長さに基づいて制限をかける)
             const edgeLen = Math.sqrt(Math.pow(tr.x - tl.x, 2) + Math.pow(tr.y - tl.y, 2));
-            const tabSize = edgeLen * this.TAB_SIZE_RATIO * 1.5;
+            const tabSize = edgeLen * this.TAB_SIZE_RATIO * this.TAB_HEIGHT_FACTOR;
             
             let minX = Math.min(tl.x, tr.x, br.x, bl.x);
             let minY = Math.min(tl.y, tr.y, br.y, bl.y);
