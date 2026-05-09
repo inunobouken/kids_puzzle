@@ -18,6 +18,7 @@
         edgeData: null,
         config: null,
         timeouts: [], // 実行中のタイマーを管理
+        maxZIndex: 100, // 現在の最大 zIndex
 
         /**
          * 画像を読み込み、デコード完了を待機する共通メソッド
@@ -210,8 +211,8 @@
                 const paths = pieceObj.element.querySelectorAll('path:not(defs path)');
                 paths.forEach(p => p.style.display = 'none');
                 
-                // zIndex を確定（1 にする）
-                this.updateZIndices();
+                // zIndex を確定（ロックされたピースは一番下へ）
+                pieceObj.element.style.zIndex = 1;
                 
                 // 完了したタイマーを配列から削除
                 this.timeouts = this.timeouts.filter(id => id !== tid);
@@ -230,6 +231,7 @@
 
             // ピース配列をクリア
             this.pieces = [];
+            this.maxZIndex = 100;
             
             // その他内部データのクリア
             this.vertices = [];
@@ -238,27 +240,28 @@
         },
 
         /**
-         * ピースを最前面に移動し、全ピースの zIndex を更新する
+         * ピースを最前面に移動する（インクリメント方式）
          */
         bringPieceToFront: function(pieceObj) {
-            const index = this.pieces.indexOf(pieceObj);
-            if (index > -1) {
-                // 配列から削除して最後に追加
-                this.pieces.splice(index, 1);
-                this.pieces.push(pieceObj);
-                
-                // 全ピースの zIndex を更新
-                this.updateZIndices();
-            }
+            if (pieceObj.isLocked) return;
+            
+            // 掴んだピースだけを新しい最大値に設定する（全ループを避ける）
+            this.maxZIndex++;
+            pieceObj.element.style.zIndex = this.maxZIndex;
         },
 
         /**
-         * 全ピースの zIndex を配列の順序に基づいて更新する
+         * 全ピースの zIndex を初期状態（またはリサイズ後）に設定する
          */
         updateZIndices: function() {
+            this.maxZIndex = 100;
             this.pieces.forEach((p, i) => {
-                // ロックされたピースは zIndex 1 固定（未配置ピースの下に回り込むように）、それ以外は 10 からの連番
-                p.element.style.zIndex = p.isLocked ? 1 : i + 10;
+                if (p.isLocked) {
+                    p.element.style.zIndex = 1;
+                } else {
+                    this.maxZIndex++;
+                    p.element.style.zIndex = this.maxZIndex;
+                }
             });
         },
 
