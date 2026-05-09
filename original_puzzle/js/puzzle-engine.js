@@ -112,7 +112,7 @@
             }
 
             // ガイドライン描画
-            window.Puzzle.UI.drawGuideLines(puzzleFrame, this.vertices, rows, cols, this.imgWidth, this.imgHeight, this.edgeData);
+            window.Puzzle.UI.drawGuideLines(puzzleFrame, this.vertices, rows, cols, this.imgWidth, this.imgHeight, this.edgeData, this.pieces);
         },
 
         /**

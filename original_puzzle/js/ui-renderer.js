@@ -12,7 +12,7 @@
         /**
          * ガイドラインをSVGで描画
          */
-        drawGuideLines: function(puzzleFrame, vertices, rows, cols, displayW, displayH, edgeData) {
+        drawGuideLines: function(puzzleFrame, vertices, rows, cols, displayW, displayH, edgeData, pieces = []) {
             // 既存のガイド要素を削除
             const existingGuide = puzzleFrame.querySelector('.guide-svg');
             if (existingGuide) existingGuide.remove();
@@ -42,6 +42,12 @@
                 return path;
             };
 
+            // ピースのロック状態を高速に引くためのマップ
+            const lockMap = {};
+            pieces.forEach(p => {
+                lockMap[`${p.r}-${p.c}`] = p.isLocked;
+            });
+
             // 横方向の線（行の区切りをピース単位で描画）
             for (let r = 1; r < rows; r++) {
                 for (let c = 0; c < cols; c++) {
@@ -51,6 +57,11 @@
                     const d = `M ${p1.x},${p1.y} ` + window.Puzzle.Geometry.drawJigsawSide(p1, p2, type);
                     const path = createPath(d);
                     path.classList.add(`edge-h-${r}-${c}`);
+
+                    // 隣接するピース（上または下）がロックされていれば消えた状態にする
+                    if (lockMap[`${r-1}-${c}`] || lockMap[`${r}-${c}`]) {
+                        path.classList.add('guide-fade-out');
+                    }
                     svg.appendChild(path);
                 }
             }
@@ -64,6 +75,11 @@
                     const d = `M ${p1.x},${p1.y} ` + window.Puzzle.Geometry.drawJigsawSide(p1, p2, type);
                     const path = createPath(d);
                     path.classList.add(`edge-v-${r}-${c}`);
+
+                    // 隣接するピース（左または右）がロックされていれば消えた状態にする
+                    if (lockMap[`${r}-${c-1}`] || lockMap[`${r}-${c}`]) {
+                        path.classList.add('guide-fade-out');
+                    }
                     svg.appendChild(path);
                 }
             }
