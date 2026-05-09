@@ -18,6 +18,9 @@
             this.imageSrc = imageSrc;
             this.pieces = [];
             
+            // Z-indexをリセット
+            window.Puzzle.Events.currentMaxZIndex = 10;
+            
             // 盤面のクリーンアップ
             window.Puzzle.UI.clearBoard(puzzleBoard, puzzleFrame);
             clearMessage.classList.add('hidden');
