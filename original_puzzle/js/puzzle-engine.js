@@ -13,6 +13,7 @@
         cols: 0,
         vertices: [],
         baseBoardSize: { w: 0, h: 0 },
+        sourceImg: null,
         config: null,
 
         /**
@@ -34,9 +35,10 @@
             const img = new Image();
             img.src = imageSrc;
             await img.decode();
+            this.sourceImg = img;
 
             this.setupResizeHandler();
-            this.renderPuzzle(img);
+            this.renderPuzzle(this.sourceImg);
         },
 
         /**
@@ -226,26 +228,23 @@
             const { rows, cols, puzzleBoard, puzzleFrame } = this.config;
             const boardRect = puzzleBoard.getBoundingClientRect();
             
-            // 画像のアスペクト比を維持して再計算
-            const img = new Image();
-            img.src = this.imageSrc;
-            
+            if (!this.sourceImg) return;
+
             // paddingの再計算
             const padding = Math.max(15, Math.min(40, boardRect.width * 0.05));
             const availableWidth = boardRect.width - padding * 2;
             const availableHeight = boardRect.height - padding * 2;
             
-            // img.width/height が未取得の場合のために元の比率を保持する必要があるが
-            // ここでは簡易的に現在の imgWidth/Height から比率を出す
-            const currentRatio = this.imgWidth / this.imgHeight;
+            // 保持している sourceImg から正確なアスペクト比を取得
+            const naturalRatio = this.sourceImg.naturalWidth / this.sourceImg.naturalHeight;
             let newImgW, newImgH;
             
-            if (availableWidth / availableHeight > currentRatio) {
+            if (availableWidth / availableHeight > naturalRatio) {
                 newImgH = availableHeight;
-                newImgW = availableHeight * currentRatio;
+                newImgW = availableHeight * naturalRatio;
             } else {
                 newImgW = availableWidth;
-                newImgH = availableWidth / currentRatio;
+                newImgH = availableWidth / naturalRatio;
             }
 
             const scale = newImgW / this.imgWidth;
