@@ -200,24 +200,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const rows = parseInt(rowsInput.value);
         const cols = parseInt(colsInput.value);
 
-        // スマホ判定
-        const isMobile = window.innerWidth <= 768;
-
-        // スマホ時: パズルボードを画面いっぱいに動的リサイズ
-        if (isMobile) {
-            const boardTop = puzzleBoard.getBoundingClientRect().top;
-            // ビューポートの残り高さからpadding分を引いてボードの高さとする
-            const availableViewportHeight = window.innerHeight - boardTop - 10;
-            puzzleBoard.style.height = `${Math.max(250, availableViewportHeight)}px`;
-            puzzleBoard.style.minHeight = 'unset';
-        }
-
         // ボードのサイズに合わせて画像をフィットさせる（比率維持）
         const boardRect = puzzleBoard.getBoundingClientRect();
         // パディングをボードサイズに比例させる（スマホ対応）
-        const padding = isMobile
-            ? Math.max(8, Math.min(20, boardRect.width * 0.03))
-            : Math.max(15, Math.min(40, boardRect.width * 0.05));
+        const padding = Math.max(15, Math.min(40, boardRect.width * 0.05));
         const availableWidth = boardRect.width - padding * 2;
         const availableHeight = boardRect.height - padding * 2;
 
