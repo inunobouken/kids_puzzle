@@ -84,8 +84,9 @@
             svg.setAttribute('viewBox', `0 0 ${geom.bbox.w} ${geom.bbox.h}`);
             svg.style.position = 'absolute';
             svg.style.overflow = 'visible';
+            svg.style.cursor = 'grab';
+            svg.style.pointerEvents = 'none'; // SVG自体はクリックを透過
             svg.style.touchAction = 'none';
-            svg.style.userSelect = 'none';
 
             const clipId = `clip-${Math.random().toString(36).substr(2, 9)}`;
             
@@ -107,6 +108,7 @@
             image.setAttribute('x', -geom.bbox.x);
             image.setAttribute('y', -geom.bbox.y);
             image.setAttribute('clip-path', `url(#${clipId})`);
+            image.style.pointerEvents = 'none'; // 画像自体は透過
             svg.appendChild(image);
 
             // 境界線（白）
@@ -118,6 +120,7 @@
             whiteLine.setAttribute('stroke-linejoin', 'round');
             whiteLine.setAttribute('clip-path', `url(#${clipId})`);
             whiteLine.classList.add('piece-border-white');
+            whiteLine.style.pointerEvents = 'none';
             svg.appendChild(whiteLine);
 
             // 境界線（黒）
@@ -128,7 +131,16 @@
             blackLine.setAttribute('stroke-width', this.BLACK_STROKE_WIDTH);
             blackLine.setAttribute('stroke-linejoin', 'round');
             blackLine.classList.add('piece-border-black');
+            blackLine.style.pointerEvents = 'none';
             svg.appendChild(blackLine);
+
+            // ヒットテスト用の透明なパス (クリック判定用)
+            const hitPath = document.createElementNS(svgNS, 'path');
+            hitPath.classList.add('hit-test-path');
+            hitPath.setAttribute('d', geom.pathData);
+            hitPath.setAttribute('fill', 'rgba(0,0,0,0)'); // 透明だが判定は持つ
+            hitPath.style.pointerEvents = 'auto'; // これだけがクリックを拾う
+            svg.appendChild(hitPath);
 
             return svg;
         },
@@ -167,7 +179,7 @@
                 image.setAttribute('y', -geom.bbox.y);
             }
 
-            // 全てのパス（クリップパス含む）の更新
+            // 全てのパス（クリップパス、ヒットパス、境界線）の更新
             const paths = svg.querySelectorAll('path');
             paths.forEach(p => {
                 p.setAttribute('d', geom.pathData);
