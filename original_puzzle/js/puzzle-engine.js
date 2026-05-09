@@ -15,6 +15,7 @@
         normalizedVertices: [],
         baseBoardSize: { w: 0, h: 0 },
         sourceImg: null,
+        edgeData: null,
         config: null,
 
         /**
@@ -28,6 +29,9 @@
             this.rows = rows;
             this.cols = cols;
             
+            // 辺データの生成
+            this.edgeData = window.Puzzle.Geometry.generateEdgeData(rows, cols);
+
             // 盤面のクリーンアップ
             window.Puzzle.UI.clearBoard(puzzleBoard, puzzleFrame);
             clearMessage.classList.add('hidden');
@@ -73,7 +77,7 @@
                 row.map(v => ({ x: v.x / this.imgWidth, y: v.y / this.imgHeight }))
             );
 
-            window.Puzzle.UI.drawGuideLines(puzzleFrame, this.vertices, rows, cols, this.imgWidth, this.imgHeight);
+            window.Puzzle.UI.drawGuideLines(puzzleFrame, this.vertices, rows, cols, this.imgWidth, this.imgHeight, this.edgeData);
 
             const frameX = (boardRect.width - this.imgWidth) / 2;
             const frameY = (boardRect.height - this.imgHeight) / 2;
@@ -81,11 +85,11 @@
             // ピース生成ループ
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < cols; c++) {
-                    const geom = window.Puzzle.Geometry.computePieceGeometry(this.vertices, r, c);
+                    const geom = window.Puzzle.Geometry.computePieceGeometry(this.vertices, r, c, this.edgeData);
                     const pieceEl = window.Puzzle.UI.createPieceElement(geom, this.imageSrc, this.imgWidth, this.imgHeight);
                     
-                    const targetX = frameX + geom.bbox.x;
-                    const targetY = frameY + geom.bbox.y;
+                    const targetX = frameX + geom.bbox.x - 0.5;
+                    const targetY = frameY + geom.bbox.y - 0.5;
 
                     // 初期配置（散らばり）の計算
                     const initPos = this.calculateInitialPosition(boardRect, frameX, frameY, geom.bbox);
@@ -151,7 +155,8 @@
             x = Math.max(0, Math.min(x, boardRect.width - bbox.w));
             y = Math.max(0, Math.min(y, boardRect.height - bbox.h));
 
-            return { x, y };
+            // 0.5pxのオフセットを考慮して座標を返す
+            return { x: x - 0.5, y: y - 0.5 };
         },
 
         /**
@@ -169,21 +174,20 @@
             pieceObj.relX = pieceObj.targetX / boardRect.width;
             pieceObj.relY = pieceObj.targetY / boardRect.height;
             
-            // 演出：本体フラッシュ境界線徐々に削除の組み合わせ
+            // 演出：本体フラッシュと枠線のフェードアウト
             pieceObj.element.classList.add('snap-flash');
+            pieceObj.element.classList.add('snap-outline');
             
-            const borderSvg = pieceObj.element.querySelector('.piece-border-svg');
-            if (borderSvg) {
-                borderSvg.classList.add('snap-outline');
-                // アニメーション完了後にリセット
-                setTimeout(() => {
-                    borderSvg.style.display = 'none';
-                    borderSvg.classList.remove('snap-outline');
-                    pieceObj.element.classList.remove('snap-flash');
-                    // zIndex を確定（1 にする）
-                    this.updateZIndices();
-                }, 600);
-            }
+            // アニメーション完了後にリセット
+            setTimeout(() => {
+                pieceObj.element.classList.remove('snap-flash');
+                // 完全に非表示にする（アニメーション後の状態を確定）
+                const paths = pieceObj.element.querySelectorAll('path:not(defs path)');
+                paths.forEach(p => p.style.display = 'none');
+                
+                // zIndex を確定（1 にする）
+                this.updateZIndices();
+            }, 600);
         },
 
         /**
@@ -261,36 +265,17 @@
             );
 
             // ガイドライン再描画
-            window.Puzzle.UI.drawGuideLines(puzzleFrame, this.vertices, rows, cols, this.imgWidth, this.imgHeight);
+            window.Puzzle.UI.drawGuideLines(puzzleFrame, this.vertices, rows, cols, this.imgWidth, this.imgHeight, this.edgeData);
 
             const frameX = (boardRect.width - this.imgWidth) / 2;
             const frameY = (boardRect.height - this.imgHeight) / 2;
 
             // 各ピースの更新
             this.pieces.forEach(p => {
-                // target座標の更新
-                p.targetX = frameX + (p.targetX - (this.baseBoardSize.w - this.imgWidth / scale) / 2) * scale;
-                // 正確なスケール計算のために、geomをベースに再計算するのが安全
-                // ここでは簡略化のため、現在の targetX/Y を基準に再計算
-                
-                // 正しいやり方: pieceObj にオリジナルの geom.bbox を保持しておく
-                // 今回は既存構造を活かし、現在の値をスケールさせる
-                p.bboxW *= scale;
-                p.bboxH *= scale;
-                p.targetX = frameX + (p.targetX - (this.baseBoardSize.w - this.imgWidth / scale) / 2) * scale;
-                // ※上記の targetX 計算は少し複雑なので、initPuzzle 時に相対座標を保存するように改善が必要
-                
-                // ピース要素のスケール更新
-                window.Puzzle.UI.updatePieceElement(p.element, scale, this.imgWidth, this.imgHeight);
-
-                if (p.isLocked) {
-                    // ロック中の場合は新ターゲットへ
-                    // initPuzzle と同じロジックで再計算
-                    // p.relX = targetX / boardRect.width
-                } else {
-                    // ドラッグ中の場合は現在の相対位置を維持
-                    const newX = p.relX * boardRect.width;
-                    const newY = p.relY * boardRect.height;
+                if (!p.isLocked) {
+                    // 未ロックの場合は現在の相対位置を維持して移動
+                    const newX = p.relX * boardRect.width - 0.5;
+                    const newY = p.relY * boardRect.height - 0.5;
                     p.element.style.left = `${newX}px`;
                     p.element.style.top = `${newY}px`;
                 }
@@ -312,14 +297,17 @@
             
             // 全ピースに対して新しいターゲットを計算
             this.pieces.forEach(p => {
-                const geom = window.Puzzle.Geometry.computePieceGeometry(this.vertices, p.r, p.c);
+                const geom = window.Puzzle.Geometry.computePieceGeometry(this.vertices, p.r, p.c, this.edgeData);
                 
-                p.targetX = frameX + geom.bbox.x;
-                p.targetY = frameY + geom.bbox.y;
+                p.targetX = frameX + geom.bbox.x - 0.5;
+                p.targetY = frameY + geom.bbox.y - 0.5;
                 p.bboxW = geom.bbox.w;
                 p.bboxH = geom.bbox.h;
                 p.centerOffsetX = geom.center.x - geom.bbox.x;
                 p.centerOffsetY = geom.center.y - geom.bbox.y;
+
+                // UIの更新（再計算された幾何情報を使用）
+                window.Puzzle.UI.applyGeometryToElement(p.element, geom, this.imgWidth, this.imgHeight);
 
                 if (p.isLocked) {
                     p.element.style.left = `${p.targetX}px`;
