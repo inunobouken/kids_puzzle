@@ -69,9 +69,15 @@
             const currentX = parseFloat(this.activePiece.element.style.left);
             const currentY = parseFloat(this.activePiece.element.style.top);
 
+            // 中心点での距離判定
+            const currentCenterX = currentX + this.activePiece.centerOffsetX;
+            const currentCenterY = currentY + this.activePiece.centerOffsetY;
+            const targetCenterX = this.activePiece.targetX + this.activePiece.centerOffsetX;
+            const targetCenterY = this.activePiece.targetY + this.activePiece.centerOffsetY;
+
             const dist = Math.sqrt(
-                Math.pow(currentX - this.activePiece.targetX, 2) + 
-                Math.pow(currentY - this.activePiece.targetY, 2)
+                Math.pow(currentCenterX - targetCenterX, 2) + 
+                Math.pow(currentCenterY - targetCenterY, 2)
             );
 
             // スナップ判定のしきい値（ピースサイズの30%）

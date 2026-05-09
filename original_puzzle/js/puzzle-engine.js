@@ -89,6 +89,8 @@
                         bboxH: geom.bbox.h,
                         relX: initPos.x / boardRect.width,
                         relY: initPos.y / boardRect.height,
+                        centerOffsetX: geom.center.x - geom.bbox.x,
+                        centerOffsetY: geom.center.y - geom.bbox.y,
                         r: r,
                         c: c,
                         isLocked: false
@@ -150,6 +152,11 @@
             pieceObj.element.style.top = `${pieceObj.targetY}px`;
             pieceObj.element.classList.remove('movable');
             pieceObj.element.classList.add('locked');
+            
+            // 相対座標を更新（リサイズ対応用）
+            const boardRect = this.config.puzzleBoard.getBoundingClientRect();
+            pieceObj.relX = pieceObj.targetX / boardRect.width;
+            pieceObj.relY = pieceObj.targetY / boardRect.height;
             
             const borderSvg = pieceObj.element.querySelector('.piece-border-svg');
             if (borderSvg) borderSvg.style.display = 'none';
@@ -302,6 +309,8 @@
                 p.targetY = frameY + geom.bbox.y;
                 p.bboxW = geom.bbox.w;
                 p.bboxH = geom.bbox.h;
+                p.centerOffsetX = geom.center.x - geom.bbox.x;
+                p.centerOffsetY = geom.center.y - geom.bbox.y;
 
                 if (p.isLocked) {
                     p.element.style.left = `${p.targetX}px`;
