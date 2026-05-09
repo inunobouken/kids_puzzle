@@ -18,9 +18,6 @@
             this.imageSrc = imageSrc;
             this.pieces = [];
             
-            // Z-indexをリセット
-            window.Puzzle.Events.currentMaxZIndex = 10;
-            
             // 盤面のクリーンアップ
             window.Puzzle.UI.clearBoard(puzzleBoard, puzzleFrame);
             clearMessage.classList.add('hidden');
@@ -87,6 +84,9 @@
                     this.pieces.push(pieceObj);
                 }
             }
+            
+            // 初回の zIndex 設定
+            this.updateZIndices();
         },
 
         /**
@@ -134,6 +134,31 @@
 
             pieceObj.element.style.transform = 'scale(1)';
             pieceObj.element.style.zIndex = 1;
+        },
+
+        /**
+         * ピースを最前面に移動し、全ピースの zIndex を更新する
+         */
+        bringPieceToFront: function(pieceObj) {
+            const index = this.pieces.indexOf(pieceObj);
+            if (index > -1) {
+                // 配列から削除して最後に追加
+                this.pieces.splice(index, 1);
+                this.pieces.push(pieceObj);
+                
+                // 全ピースの zIndex を更新
+                this.updateZIndices();
+            }
+        },
+
+        /**
+         * 全ピースの zIndex を配列の順序に基づいて更新する
+         */
+        updateZIndices: function() {
+            this.pieces.forEach((p, i) => {
+                // ロックされたピースは zIndex 1 固定、それ以外は 10 からの連番
+                p.element.style.zIndex = p.isLocked ? 1 : i + 10;
+            });
         },
 
         /**

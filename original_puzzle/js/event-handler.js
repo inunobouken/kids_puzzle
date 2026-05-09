@@ -8,7 +8,6 @@
         isDragging: false,
         activePiece: null,
         offset: { x: 0, y: 0 },
-        currentMaxZIndex: 10,
 
         /**
          * ピースにドラッグイベントを登録する
@@ -26,8 +25,8 @@
                 this.offset.x = e.clientX - rect.left;
                 this.offset.y = e.clientY - rect.top;
 
-                this.currentMaxZIndex++;
-                this.activePiece.element.style.zIndex = this.currentMaxZIndex;
+                // 最前面に移動
+                window.Puzzle.Engine.bringPieceToFront(this.activePiece);
 
                 const moveHandler = (moveEvent) => this.onPointerMove(moveEvent, puzzleBoard);
                 const upHandler = (upEvent) => {
